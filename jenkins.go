@@ -381,6 +381,21 @@ func (j *Jenkins) GetAllUsers() (int, error) {
 	return len(asynchPeople.Users), nil
 }
 
+func (j *Jenkins) GetAllActiveSessions() (int, error) {
+	sessions := new(Sessions)
+
+	qr := map[string]string{
+		"part": "sessions",
+		"format": "json",
+	}
+
+	_, err := j.Requester.GetJSON("/monitoring", sessions, qr, true)
+	if err != nil {
+		return -1, err
+	}
+	return len(sessions.Sessions), nil
+}
+
 // Get all builds Numbers and URLS for a specific job.
 // There are only build IDs here,
 // To get all the other info of the build use jenkins.GetBuild(job,buildNumber)

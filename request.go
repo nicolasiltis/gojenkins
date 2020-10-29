@@ -110,11 +110,13 @@ func (r *Requester) PostXML(endpoint string, xml string, responseStruct interfac
 	return r.Do(ar, &responseStruct, querystring)
 }
 
-func (r *Requester) GetJSON(endpoint string, responseStruct interface{}, query map[string]string) (*http.Response, error) {
+func (r *Requester) GetJSON(endpoint string, responseStruct interface{}, query map[string]string, disableSuffix ...bool) (*http.Response, error) {
 	ar := NewAPIRequest("GET", endpoint, nil)
 	ar.SetHeader("Content-Type", "application/json")
-	ar.Suffix = "api/json"
-	return r.Do(ar, &responseStruct, query)
+	if len(disableSuffix) == 0  || !disableSuffix[0]  {
+		ar.Suffix = "api/json"
+	}
+	return r.Do(ar, &responseStruct, query, disableSuffix)
 }
 
 func (r *Requester) GetXML(endpoint string, responseStruct interface{}, query map[string]string) (*http.Response, error) {
@@ -144,8 +146,8 @@ func (r *Requester) redirectPolicyFunc(req *http.Request, via []*http.Request) e
 }
 
 func (r *Requester) Do(ar *APIRequest, responseStruct interface{}, options ...interface{}) (*http.Response, error) {
-	if !strings.HasSuffix(ar.Endpoint, "/") && ar.Method != "POST" {
-		ar.Endpoint += "/"
+	if !strings.HasSuffix(ar.Endpoint, "/") && ar.Method != "POST" && ar.Endpoint != "/monitoring" {
+			ar.Endpoint += "/"
 	}
 
 	fileUpload := false
@@ -262,5 +264,6 @@ func (r *Requester) ReadJSONResponse(response *http.Response, responseStruct int
 	defer response.Body.Close()
 
 	json.NewDecoder(response.Body).Decode(responseStruct)
+	
 	return response, nil
 }
