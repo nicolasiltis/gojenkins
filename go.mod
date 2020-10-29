@@ -1,4 +1,4 @@
-module github.com/nicolas.iltis/gojenkins
+module github.com/nicolasiltis/gojenkins
 
 go 1.13
 
