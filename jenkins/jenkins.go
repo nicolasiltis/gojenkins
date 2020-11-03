@@ -421,25 +421,45 @@ func (j *Jenkins) GetAllJobNames() ([]InnerJob, error) {
 	return exec.Raw.Jobs, nil
 }
 
-// Get All Possible Job Objects.
-// Each job will be queried.
-func (j *Jenkins) GetAllJobs() ([]*Job, error) {
+func (j *Jenkins) ParseJobs(parentName ...string) (jobs []*Job, err error) {
 	exec := Executor{Raw: new(ExecutorResponse), Jenkins: j}
-	_, err := j.Requester.GetJSON("/", exec.Raw, nil)
+	if parentName[0] == "/" {
+		_, err = j.Requester.GetJSON(parentName[0], exec.Raw, nil)
+	} else {
+		_, err = j.Requester.GetJSON("/job/" + strings.Join(parentName, "/job/"), exec.Raw, nil)
+	}
 
 	if err != nil {
 		return nil, err
 	}
-
-	jobs := make([]*Job, len(exec.Raw.Jobs))
-	for i, job := range exec.Raw.Jobs {
-		ji, err := j.GetJob(job.Name)
+		// jobs := make([]*Job, len(exec.Raw.Jobs))
+	for _, job := range exec.Raw.Jobs {
+		var ji *Job
+		if parentName[0] == "/" {
+			ji, err = j.GetJob(job.Name)
+		} else {
+			ji, err = j.GetJob(job.Name, strings.Join(parentName,","))
+		}
 		if err != nil {
 			return nil, err
 		}
-		jobs[i] = ji
+		if job.Class == "com.cloudbees.hudson.plugins.folder.Folder" || job.Class == "jenkins.branch.OrganizationFolder" || job.Class == "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" {
+			ChildJobs, err := j.ParseJobs(job.Name)
+			if err != nil {
+				return nil, err
+			}
+			jobs = append(jobs, ChildJobs...)
+		} else {
+			jobs = append(jobs,ji)
+		}
 	}
 	return jobs, nil
+}
+
+// Get All Possible Job Objects.
+// Each job will be queried.
+func (j *Jenkins) GetAllJobs() ([]*Job, error) {
+	return j.ParseJobs("/")
 }
 
 // Returns a Queue

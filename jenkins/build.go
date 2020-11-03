@@ -171,7 +171,7 @@ type BuildResponse struct {
 	Number            int64       `json:"number"`
 	QueueID           int64       `json:"queueId"`
 	Result            string      `json:"result"`
-	Timestamp         int64       `json:"timestamp"`
+	Timestamp         int64       `json:"timestamp,omitempty"`
 	URL               string      `json:"url"`
 	MavenArtifacts    interface{} `json:"mavenArtifacts"`
 	MavenVersionUsed  string      `json:"mavenVersionUsed"`
